@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tapeline · NSE market analytics with receipts</title>
+<meta name="description" content="Indian stock market analytics where every screen shows its measured track record: breadth, signals, sector rotation, factors, and a Nifty 500 screener.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%238b7cf6'/%3E%3Cpath d='M6 21l6-6 5 4 9-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<script>
+  try { const t = localStorage.getItem('tl-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+  <aside class="side" id="side">
+    <a class="brand" href="#/">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M6 21l6-6 5 4 9-10"/></svg></span>
+      <span><b>Tapeline</b><small>NSE analytics with receipts</small></span>
+    </a>
+    <nav class="nav" id="nav">
+      <div class="nav-h">Market</div>
+      <a href="#/" data-r="market"><i data-icon="pulse"></i>Market pulse</a>
+      <a href="#/sectors" data-r="sectors"><i data-icon="grid"></i>Sector rotation</a>
+      <a href="#/factors" data-r="factors"><i data-icon="layers"></i>Factor monitor</a>
+      <div class="nav-h">Research</div>
+      <a href="#/signals" data-r="signals"><i data-icon="flask"></i>Signal lab</a>
+      <a href="#/screener" data-r="screener"><i data-icon="filter"></i>Screener</a>
+      <a href="#/watchlist" data-r="watchlist"><i data-icon="star"></i>Watchlist</a>
+      <div class="nav-h">About</div>
+      <a href="#/method" data-r="method"><i data-icon="book"></i>Methodology</a>
+    </nav>
+    <div class="side-foot" id="asof"></div>
+  </aside>
+  <div class="main-wrap">
+    <header class="top">
+      <button class="icon-btn menu" id="menuBtn" aria-label="Open menu"><i data-icon="menu"></i></button>
+      <button class="search-btn" id="searchBtn" aria-label="Search stocks">
+        <i data-icon="search"></i><span>Search 750 NSE stocks…</span><kbd>/</kbd>
+      </button>
+      <div class="top-r">
+        <span class="asof-pill" id="asofPill"></span>
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle theme"><i data-icon="sun"></i></button>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="foot">
+      End-of-day NSE data. Research and education only, not investment advice. Past measured performance does not predict future returns.
+    </footer>
+  </div>
+</div>
+
+<div class="modal" id="search" hidden>
+  <div class="modal-card" role="dialog" aria-label="Search">
+    <div class="search-in"><i data-icon="search"></i><input id="q" placeholder="Symbol or company name" autocomplete="off" spellcheck="false"><kbd>esc</kbd></div>
+    <div class="search-res" id="qres"></div>
+  </div>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script src="vendor/echarts.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
