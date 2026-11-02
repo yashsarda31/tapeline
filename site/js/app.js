@@ -1,7 +1,7 @@
 import { disposeAll, rethemeAll } from './lib/charts.js';
-import { meta, screener } from './lib/data.js';
-import { date, esc, pct, cls, price } from './lib/fmt.js';
-import { hydrateIcons, icon, initTips } from './lib/ui.js';
+import { load, meta, screener } from './lib/data.js';
+import { date, esc, num, pct, cls, price } from './lib/fmt.js';
+import { hydrateIcons, icon, initTips, watch } from './lib/ui.js';
 
 const ROUTES = {
   '': () => import('./pages/market.js'),
@@ -18,6 +18,26 @@ const NAV = { '': 'market', s: null };
 const main = document.getElementById('main');
 let seq = 0;
 
+const SKELETON = `<div class="skel" aria-busy="true" aria-label="Loading">
+  <div class="sk" style="width:150px;height:12px"></div><div class="sk" style="width:min(520px,80%);height:36px;margin-top:6px"></div>
+  <div class="sk" style="width:min(700px,92%);height:14px"></div><div class="sk" style="width:min(560px,70%);height:14px"></div>
+  <div class="skel-row"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>
+  <div class="sk" style="height:340px;border-radius:14px;margin-top:2px"></div></div>`;
+
+// Breadcrumb from the nav: "Section / Page".
+function crumb(navKey, key, parts) {
+  const link = document.querySelector(`#nav a[data-r="${navKey}"]`);
+  let sec = '', page = '';
+  if (link) {
+    page = link.textContent.trim();
+    let p = link.previousElementSibling;
+    while (p && !p.classList.contains('nav-h')) p = p.previousElementSibling;
+    sec = p?.textContent || '';
+  }
+  if (key === 's') { sec = 'Stocks'; page = parts[1] || ''; }
+  document.getElementById('crumb').innerHTML = `${sec ? `<span>${esc(sec)}</span><i>/</i>` : ''}<b>${esc(page)}</b>`;
+}
+
 async function route() {
   const hash = location.hash.replace(/^#\/?/, '');
   const [path, query] = hash.split('?');
@@ -28,13 +48,15 @@ async function route() {
   document.getElementById('side').classList.remove('open');
   const navKey = key in NAV ? NAV[key] : key;
   document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('on', a.dataset.r === navKey));
+  crumb(navKey, key, parts);
+  syncWatchCount();
   disposeAll();
   document.title = 'Tapeline · NSE market analytics with receipts';
   if (!loader) {
     main.innerHTML = `<div class="empty"><h2>Page not found</h2><p><a class="btn" href="#/">Back to market</a></p></div>`;
     return;
   }
-  main.innerHTML = '<div class="loading">Loading…</div>';
+  main.innerHTML = SKELETON;
   try {
     const mod = await loader();
     if (my !== seq) return;
@@ -137,16 +159,44 @@ themeBtn.addEventListener('click', () => {
   syncThemeIcon();
   rethemeAll();
 });
-document.getElementById('menuBtn').addEventListener('click', () => document.getElementById('side').classList.toggle('open'));
+const side = document.getElementById('side');
+document.getElementById('menuBtn').addEventListener('click', (e) => { e.stopPropagation(); side.classList.toggle('open'); });
+document.addEventListener('click', (e) => {
+  if (side.classList.contains('open') && !side.contains(e.target)) side.classList.remove('open');
+});
+
+// ---------- watchlist count ----------
+function syncWatchCount() {
+  const n = watch.all().length;
+  document.getElementById('wlCount').textContent = n ? String(n) : '';
+}
+window.addEventListener('tl-watch', syncWatchCount);
+window.addEventListener('storage', syncWatchCount);
+
+// ---------- ticker tape ----------
+function tape(mk) {
+  const track = document.getElementById('tapeTrack');
+  const item = (x) => {
+    const inv = x.id === 'vix';
+    return `<span class="tk"><span class="tk-n">${esc(x.label)}</span><span class="tk-p">${num(x.last, x.last > 1000 ? 1 : 2)}</span><span class="tk-c ${cls(inv ? -x.r1d : x.r1d)}">${pct(x.r1d, 2)}</span></span>`;
+  };
+  const run = mk.indices.map(item).join('');
+  track.innerHTML = `<div class="tape-run">${run}</div><div class="tape-run" aria-hidden="true">${run}</div>`;
+  // Constant reading speed whatever the content width.
+  track.style.setProperty('--dur', `${Math.max(30, track.firstElementChild.offsetWidth / 40)}s`);
+}
 
 // ---------- boot ----------
 hydrateIcons();
 syncThemeIcon();
 initTips();
+document.getElementById('kbdHint').textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K';
 meta().then((m) => {
-  document.getElementById('asofPill').innerHTML = `Data as of <b>${date(m.asof)}</b>`;
+  document.getElementById('asofPill').innerHTML = `<span class="dot"></span>EOD <b>${date(m.asof)}</b>`;
   document.getElementById('asof').innerHTML =
-    `End-of-day data · <b>${date(m.asof)}</b><br>${m.symbols} stocks · liquid universe ${m.universe}<br>Built ${esc(m.built)}`;
+    `<div class="st"><span class="dot live"></span>End-of-day · <b>${date(m.asof)}</b></div>${m.symbols} stocks · liquid universe ${m.universe}<br><span class="faint">Built ${esc(m.built)}</span>`;
+  document.getElementById('qMeta').textContent = `${m.symbols} NSE stocks · ${PAGES.length} pages`;
 }).catch(() => {});
+load('market').then(tape).catch(() => document.getElementById('tape').remove());
 window.addEventListener('hashchange', route);
 route();

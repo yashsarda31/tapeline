@@ -32,7 +32,7 @@ const co = (r) => `<div class="co"><b>${esc(r.sym)}${r.fno ? ' <span class="fain
 const P = (k, d = 1) => ({ key: k, label: { r1d: '1D', r1w: '1W', r1m: '1M', r3m: '3M', r6m: '6M', ytd: 'YTD', r1y: '1Y' }[k] || k, r: true, fmt: (r) => `<span class="${cls(r[k])}">${pct(r[k], d)}</span>` });
 
 function viewCols(view, sigName) {
-  const star = { key: 'star', label: '', sort: false, fmt: (r) => `<button class="icon-btn wl" data-s="${esc(r.sym)}" style="width:26px;height:26px;border:0;background:none;color:${watch.has(r.sym) ? 'var(--warn)' : 'var(--faint)'}" aria-label="Toggle watchlist">${icon('star')}</button>` };
+  const star = { key: 'star', label: '', sort: false, fmt: (r) => `<button class="icon-btn wl" data-s="${esc(r.sym)}" style="width:26px;height:26px;border:0;background:none;color:${watch.has(r.sym) ? 'var(--accent)' : 'var(--faint)'}" aria-label="Toggle watchlist">${icon('star')}</button>` };
   const stock = { key: 'sym', label: 'Stock', asc: true, fmt: co };
   const sec = { key: 'sector', label: 'Sector', asc: true, fmt: (r) => `<span class="muted">${esc(r.sector)}</span>` };
   const mcap = { key: 'mcap', label: 'Mkt cap', r: true, fmt: (r) => cr(r.mcap) };

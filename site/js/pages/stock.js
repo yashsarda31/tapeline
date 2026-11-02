@@ -1,4 +1,4 @@
-import { axis, base, chart, colors, heatColor, tooltipRow } from '../lib/charts.js';
+import { alpha, areaGrad, axis, base, chart, colors, dateAxis, heatColor, tooltipRow } from '../lib/charts.js';
 import { load, meta, screener, stock } from '../lib/data.js';
 import { cls, cr, date, esc, int, isOk, num, pct, pctAbs, price, t as tf, vol } from '../lib/fmt.js';
 import { h, help, icon, seg, table, watch } from '../lib/ui.js';
@@ -68,7 +68,7 @@ export async function render(root, parts) {
   const sw = cc.querySelector('.seg-wrap');
   sw.append(seg(RANGES.filter(([n]) => +n <= dates.length + 30 || n === '63'), range, (v) => { range = v; inst.setOption(opt(colors()), true); }));
   sw.append(seg([['ma', 'Moving averages'], ['rs', 'vs Nifty 50'], ['sig', 'Signal history']], overlay, (v) => { overlay = v; inst.setOption(opt(colors()), true); }));
-  cc.querySelector('#lg').innerHTML = `<span><i class="sw" style="background:#4f8cff"></i>50-DMA</span><span><i class="sw" style="background:#f2994a"></i>200-DMA</span><span><i class="sw" style="background:var(--accent)"></i>Delivery %</span>`;
+  cc.querySelector('#lg').innerHTML = `<span><i class="sw" style="background:var(--c2)"></i>50-DMA</span><span><i class="sw" style="background:var(--c3)"></i>200-DMA</span><span><i class="sw" style="background:var(--accent)"></i>Delivery %</span>`;
 
   // stats
   const rng = S.hi52 > S.lo52 ? (S.close - S.lo52) / (S.hi52 - S.lo52) : null;
@@ -144,7 +144,7 @@ export async function render(root, parts) {
       xAxis: { type: 'category', data: d.holding.map((x) => x[0].slice(0, 7)), ...axis(c), splitLine: { show: false } },
       yAxis: { type: 'value', scale: true, ...axis(c), axisLabel: { ...axis(c).axisLabel, formatter: (v) => `${v}%` } },
       tooltip: { ...base(c).tooltip, valueFormatter: (v) => `${num(v, 2)}%` },
-      series: [{ name: 'Promoter', type: 'bar', barMaxWidth: 22, data: d.holding.map((x) => x[1]), itemStyle: { color: c.accent, borderRadius: 3 } }],
+      series: [{ name: 'Promoter', type: 'bar', barMaxWidth: 22, data: d.holding.map((x) => x[1]), itemStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: c.accent }, { offset: 1, color: alpha(c.accent, 0.25) }] }, borderRadius: [4, 4, 0, 0] } }],
     }));
   } else hs.querySelector('#hold').outerHTML = '<div class="empty">No shareholding data.</div>';
   const se = d.season;
@@ -244,14 +244,14 @@ function priceOption(c, d, dates, ma50, ma200, markers, sigById, range, overlay)
     },
   ];
   if (overlay === 'ma' || overlay === 'sig') {
-    series.push({ name: '50-DMA', type: 'line', data: ma50, symbol: 'none', lineStyle: { width: 1.2, color: '#4f8cff' }, color: '#4f8cff' });
-    series.push({ name: '200-DMA', type: 'line', data: ma200, symbol: 'none', lineStyle: { width: 1.2, color: '#f2994a' }, color: '#f2994a' });
+    series.push({ name: '50-DMA', type: 'line', data: ma50, symbol: 'none', lineStyle: { width: 1.2, color: c.c2 }, color: c.c2 });
+    series.push({ name: '200-DMA', type: 'line', data: ma200, symbol: 'none', lineStyle: { width: 1.2, color: c.c3 }, color: c.c3 });
   } else if (overlay === 'rs' && d.rs) {
     series.push({ name: 'Ratio to Nifty 50', type: 'line', data: d.rs, yAxisIndex: 3, symbol: 'none', lineStyle: { width: 1.4, color: c.warn, type: 'dashed' }, color: c.warn });
   }
   series.push({ name: 'Volume', type: 'bar', data: volData, xAxisIndex: 1, yAxisIndex: 1, barMaxWidth: 8 });
-  series.push({ name: 'Delivery %', type: 'line', data: d.d, xAxisIndex: 2, yAxisIndex: 2, symbol: 'none', lineStyle: { width: 1.1, color: c.accent }, color: c.accent, areaStyle: { color: c.accent, opacity: 0.08 }, connectNulls: false });
-  const cat = (idx, show) => ({ type: 'category', data: dates, gridIndex: idx, ...axis(c), axisLabel: { ...axis(c).axisLabel, show }, splitLine: { show: false }, boundaryGap: true });
+  series.push({ name: 'Delivery %', type: 'line', data: d.d, xAxisIndex: 2, yAxisIndex: 2, symbol: 'none', lineStyle: { width: 1.1, color: c.accent }, color: c.accent, areaStyle: areaGrad(c.accent, 0.2), connectNulls: false });
+  const cat = (idx, show) => ({ type: 'category', data: dates, gridIndex: idx, ...axis(c), axisLabel: { ...dateAxis(c).axisLabel, show }, splitLine: { show: false }, boundaryGap: true });
   return {
     ...base(c),
     axisPointer: { link: [{ xAxisIndex: 'all' }] },
@@ -278,8 +278,8 @@ function priceOption(c, d, dates, ma50, ma200, markers, sigById, range, overlay)
         s += tooltipRow(d.c[i] >= d.o[i] ? upCol : dnCol, 'Close', `${price(d.c[i])} <span style="color:${ch >= 0 ? upCol : dnCol}">${pct(ch, 2)}</span>`);
         s += tooltipRow(c.faint, 'O / H / L', `${price(d.o[i])} / ${price(d.h[i])} / ${price(d.l[i])}`);
         if (overlay !== 'rs') {
-          if (ma50[i]) s += tooltipRow('#4f8cff', '50-DMA', price(ma50[i]));
-          if (ma200[i]) s += tooltipRow('#f2994a', '200-DMA', price(ma200[i]));
+          if (ma50[i]) s += tooltipRow(c.c2, '50-DMA', price(ma50[i]));
+          if (ma200[i]) s += tooltipRow(c.c3, '200-DMA', price(ma200[i]));
         }
         s += tooltipRow(c.faint, 'Volume', vol(d.v[i]));
         if (d.d[i] !== null) s += tooltipRow(c.accent, 'Delivery', `${num(d.d[i], 1)}%`);

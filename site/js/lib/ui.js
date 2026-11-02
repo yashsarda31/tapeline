@@ -143,6 +143,7 @@ export const watch = {
     const i = w.indexOf(s);
     if (i >= 0) w.splice(i, 1); else w.push(s);
     try { localStorage.setItem(WL_KEY, JSON.stringify(w)); } catch {}
+    window.dispatchEvent(new Event('tl-watch'));
     return i < 0;
   },
 };

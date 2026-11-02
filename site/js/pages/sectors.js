@@ -1,9 +1,9 @@
-import { axis, base, chart, colors, heatColor, tooltipRow } from '../lib/charts.js';
+import { axis, base, chart, colors, dateAxis, heatColor, tooltipRow } from '../lib/charts.js';
 import { load } from '../lib/data.js';
 import { cls, esc, int, pct, pctAbs } from '../lib/fmt.js';
 import { h, help, seg, table } from '../lib/ui.js';
 
-const QUAD_COLOR = { Leading: 'up', Weakening: 'warn', Lagging: 'down', Improving: 'accent' };
+const QUAD_COLOR = { Leading: 'up', Weakening: 'warn', Lagging: 'down', Improving: 'info' };
 
 export async function render(root) {
   const sc = await load('sectors');
@@ -46,7 +46,7 @@ export async function render(root) {
     color: c.series,
     legend: { type: 'scroll', top: 0, textStyle: { color: c.muted, fontSize: 11 }, itemWidth: 12, itemHeight: 8, pageTextStyle: { color: c.muted } },
     grid: { left: 8, right: 12, top: 34, bottom: 8, containLabel: true },
-    xAxis: { type: 'category', data: sc.rel_dates, ...axis(c), splitLine: { show: false } },
+    xAxis: { type: 'category', data: sc.rel_dates, ...dateAxis(c), splitLine: { show: false } },
     yAxis: { type: 'value', scale: true, ...axis(c) },
     tooltip: { ...base(c).tooltip, order: 'valueDesc', valueFormatter: (v) => (v === null || v === undefined ? '—' : v.toFixed(3)) },
     series: S.map((s) => ({ name: s.id, type: 'line', data: s.rel, symbol: 'none', lineStyle: { width: 1.5 }, emphasis: { focus: 'series' } })),
@@ -106,7 +106,7 @@ function rrgOption(c, S) {
         markArea: {
           silent: true, label: { position: 'insideTopLeft', color: c.faint, fontSize: 11, fontWeight: 600 },
           data: [
-            quad('Improving', x0, 100, 100, y1, alpha(c.accent, 0.06)),
+            quad('Improving', x0, 100, 100, y1, alpha(c.info, 0.07)),
             quad('Leading', 100, x1, 100, y1, alpha(c.up, 0.07)),
             quad('Lagging', x0, 100, y0, 100, alpha(c.down, 0.06)),
             quad('Weakening', 100, x1, y0, 100, alpha(c.warn, 0.07)),

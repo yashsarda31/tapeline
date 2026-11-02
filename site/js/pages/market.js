@@ -1,4 +1,4 @@
-import { axis, base, chart, colors, heatColor, spark, tooltipRow } from '../lib/charts.js';
+import { alpha, areaGrad, axis, base, chart, colors, dateAxis, heatColor, spark, tooltipRow } from '../lib/charts.js';
 import { load, screener } from '../lib/data.js';
 import { cls, date, esc, int, num, ordinal, pct, pctAbs, price, t as tf } from '../lib/fmt.js';
 import { h, help, seg, table } from '../lib/ui.js';
@@ -17,11 +17,11 @@ export async function render(root) {
 
   // India index cards
   const india = mk.indices.filter((x) => x.group === 'india');
-  const cards = h(`<div class="grid g6"></div>`);
+  const cards = h(`<div class="card strip c6"></div>`);
   root.append(cards);
   india.forEach((x) => {
     const inv = x.id === 'vix';
-    const c = h(`<div class="card idx"><div class="n"><span>${esc(x.label)}</span><span class="${cls(inv ? -x.r1d : x.r1d)}">${pct(x.r1d, 2)}</span></div>
+    const c = h(`<div class="idx"><div class="n"><span>${esc(x.label)}</span><span class="${cls(inv ? -x.r1d : x.r1d)}">${pct(x.r1d, 2)}</span></div>
       <div class="p">${num(x.last, x.last > 1000 ? 1 : 2)}</div>
       <div class="n"><span>1M <b class="${cls(inv ? -x.r1m : x.r1m)}">${pct(x.r1m)}</b></span><span>1Y <b class="${cls(inv ? -x.r1y : x.r1y)}">${pct(x.r1y)}</b></span></div>
       <div class="spark"></div></div>`);
@@ -31,16 +31,16 @@ export async function render(root) {
 
   // breadth tiles
   const advPct = s.adv / Math.max(1, s.adv + s.dec);
-  root.append(h(`<div class="grid g4" style="margin-top:16px">
-    <div class="card stat"><div class="k">Advancers / decliners ${help('Liquid universe, latest session.')}</div>
+  root.append(h(`<div class="card strip c4" style="margin-top:16px">
+    <div class="stat"><div class="k">Advancers / decliners ${help('Liquid universe, latest session.')}</div>
       <div class="v"><span class="up">${s.adv}</span> <span class="faint">/</span> <span class="down">${s.dec}</span></div>
       <div class="adbar"><div class="a" style="width:${advPct * 100}%"></div><div class="d" style="width:${(1 - advPct) * 100}%"></div></div>
       <div class="d">Median stock ${pct(s.ew_med1d, 2)} · equal-weight ${pct(s.ew1d, 2)}</div></div>
-    <div class="card stat"><div class="k">Above 50-day average ${help('Share of liquid stocks closing above their own 50-day moving average.')}</div>
+    <div class="stat"><div class="k">Above 50-day average ${help('Share of liquid stocks closing above their own 50-day moving average.')}</div>
       <div class="v">${pctAbs(s.p50)}</div><div class="d">Lower than ${pctAbs(1 - s.p50_rank)} of sessions since ${date(s.since)}</div></div>
-    <div class="card stat"><div class="k">Above 200-day average ${help('Share of liquid stocks closing above their own 200-day moving average: the long-term trend.')}</div>
+    <div class="stat"><div class="k">Above 200-day average ${help('Share of liquid stocks closing above their own 200-day moving average: the long-term trend.')}</div>
       <div class="v">${pctAbs(s.p200)}</div><div class="d">Lower than ${pctAbs(1 - s.p200_rank)} of sessions since ${date(s.since)}</div></div>
-    <div class="card stat"><div class="k">52-week highs / lows ${help('New 52-week closing highs and lows in the liquid universe.')}</div>
+    <div class="stat"><div class="k">52-week highs / lows ${help('New 52-week closing highs and lows in the liquid universe.')}</div>
       <div class="v"><span class="up">${s.nh}</span> <span class="faint">/</span> <span class="down">${s.nl}</span></div>
       <div class="d">McClellan oscillator ${num(s.mcc, 0)} ${help('19/39-day EMA spread of net advances. Below −100 is a washed-out reading, above +100 a strong thrust.')}</div></div>
   </div>`));
@@ -149,15 +149,15 @@ function breadthOption(c0, hist, mode, zoom) {
   let lower;
   if (mode === 'dma') {
     lower = [
-      { name: '% above 200-DMA', type: 'line', data: hist.p200.map((v) => v * 100), color: c.accent, areaStyle: { color: c.accent, opacity: 0.08 } },
-      { name: '% above 50-DMA', type: 'line', data: hist.p50.map((v) => v * 100), color: '#4f8cff' },
+      { name: '% above 200-DMA', type: 'line', data: hist.p200.map((v) => v * 100), color: c.accent, areaStyle: areaGrad(c.accent, 0.22) },
+      { name: '% above 50-DMA', type: 'line', data: hist.p50.map((v) => v * 100), color: c.c2 },
     ];
   } else if (mode === 'hl') {
     lower = [{ name: 'New highs − new lows', type: 'bar', data: hist.nh.map((v, i) => ({ value: v - hist.nl[i], itemStyle: { color: v - hist.nl[i] >= 0 ? c.up : c.down } })) }];
   } else if (mode === 'mcc') {
-    lower = [{ name: 'McClellan oscillator', type: 'line', data: hist.mcc, color: c.accent, areaStyle: { opacity: 0.1 } }];
+    lower = [{ name: 'McClellan oscillator', type: 'line', data: hist.mcc, color: c.accent, areaStyle: { color: alpha(c.accent, 0.12) } }];
   } else {
-    lower = [{ name: 'India VIX', type: 'line', data: hist.vix || [], color: c.warn, areaStyle: { color: c.warn, opacity: 0.08 } }];
+    lower = [{ name: 'India VIX', type: 'line', data: hist.vix || [], color: c.warn, areaStyle: areaGrad(c.warn, 0.2) }];
   }
   lower.forEach((x) => Object.assign(x, { xAxisIndex: 1, yAxisIndex: 1, symbol: 'none', lineStyle: { width: 1.3 }, large: true }));
   return {
@@ -167,7 +167,7 @@ function breadthOption(c0, hist, mode, zoom) {
     grid: [{ left: 8, right: 12, top: 28, height: '48%', containLabel: true }, { left: 8, right: 12, top: '62%', bottom: 52, containLabel: true }],
     xAxis: [
       { type: 'category', data: hist.dates, ...axis(c), axisLabel: { show: false }, splitLine: { show: false } },
-      { type: 'category', data: hist.dates, gridIndex: 1, ...axis(c), splitLine: { show: false } },
+      { type: 'category', data: hist.dates, gridIndex: 1, ...dateAxis(c), splitLine: { show: false } },
     ],
     yAxis: [
       { type: 'value', scale: true, ...axis(c), axisLabel: { ...axis(c).axisLabel, formatter: (v) => Math.round(v).toLocaleString('en-IN') } },
@@ -175,7 +175,7 @@ function breadthOption(c0, hist, mode, zoom) {
     ],
     dataZoom: [
       { type: 'inside', xAxisIndex: [0, 1], start, end },
-      { type: 'slider', xAxisIndex: [0, 1], start, end, height: 22, bottom: 8, borderColor: c.line, backgroundColor: c.card2, fillerColor: 'rgba(130,120,240,.12)', dataBackground: { lineStyle: { color: c.line2 }, areaStyle: { color: c.card2 } }, textStyle: { color: c.muted, fontSize: 10 }, handleStyle: { color: c.accent, borderColor: c.accent } },
+      { type: 'slider', xAxisIndex: [0, 1], start, end, height: 22, bottom: 8, borderColor: c.line, backgroundColor: c.card2, fillerColor: alpha(c.accent, 0.1), dataBackground: { lineStyle: { color: c.line2 }, areaStyle: { color: c.card2 } }, selectedDataBackground: { lineStyle: { color: c.accent, opacity: 0.6 }, areaStyle: { color: alpha(c.accent, 0.08) } }, moveHandleStyle: { color: c.line2 }, textStyle: { color: c.muted, fontSize: 10, fontFamily: c.mono }, handleStyle: { color: c.card, borderColor: c.accent }, brushSelect: false },
     ],
     tooltip: {
       ...base(c).tooltip,

@@ -1,4 +1,4 @@
-import { axis, base, chart, tooltipRow } from '../lib/charts.js';
+import { axis, base, chart, dateAxis, tooltipRow } from '../lib/charts.js';
 import { load, screener } from '../lib/data.js';
 import { cls, date, esc, int, num, pct, pctAbs, price, t as tf } from '../lib/fmt.js';
 import { h, help, icon, seg, table } from '../lib/ui.js';
@@ -68,7 +68,7 @@ function overview(root, sg) {
       : (b.horizons['20'].t ?? -99) * sgn(b) - (a.horizons['20'].t ?? -99) * sgn(a)));
     grid.innerHTML = list.map((s) => {
       const hz = s.horizons['20'];
-      return `<a class="card sig" href="#/signals/${s.id}">
+      return `<a class="card sig v-${s.verdict}" href="#/signals/${s.id}">
         <div class="row"><span class="grp">${esc(s.group)}${s.side === 'short' ? ' · bearish' : ''}</span>${verdictTag(s.verdict, s.side)}</div>
         <h3>${esc(s.name)}</h3>
         <div class="row" style="align-items:flex-end"><div><div class="big ${cls(hz.mean)}">${pct(hz.mean, 2)}</div><div class="muted" style="font-size:11.5px">avg excess return, next 20 sessions</div></div></div>
@@ -134,7 +134,7 @@ function detail(root, sg, scr, id) {
   }));
   chart(ch.querySelector('#cc'), (c) => ({
     ...base(c),
-    xAxis: { type: 'category', data: H.curve.map((x) => x[0]), ...axis(c), splitLine: { show: false } },
+    xAxis: { type: 'category', data: H.curve.map((x) => x[0]), ...dateAxis(c), splitLine: { show: false } },
     yAxis: { type: 'value', scale: true, ...axis(c), axisLabel: { ...axis(c).axisLabel, formatter: (v) => pct(v, 1) } },
     tooltip: { ...base(c).tooltip, valueFormatter: (v) => pct(v, 2) },
     series: [{ type: 'line', data: H.curve.map((x) => x[1]), symbol: 'none', color: c.accent, lineStyle: { width: 2 }, areaStyle: { opacity: 0.08 },
